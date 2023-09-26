@@ -25,24 +25,35 @@
 ;;; Code:
 (require 'xml)
 
+(defun maple-translate-youdao-result(node child-name)
+  "Get result with NODE CHILD-NAME."
+  (decode-coding-string (car (xml-node-children (car (xml-get-children node child-name)))) 'utf-8))
+
 (defun maple-translate-youdao-format(content)
   "Format from search CONTENT."
   (when content
     (let* ((root (with-temp-buffer (insert content)
                                    (xml-parse-region (point-min) (point-max))))
            (xml-data (car root))
-           (custom-translation (car (xml-get-children xml-data 'custom-translation)))
-           (translation (car (xml-get-children custom-translation 'translation)))
-           (content (car (xml-get-children translation 'content)))
-           (result (car (xml-node-children content))))
-      (if (null result) (format "no result")
-        (decode-coding-string result 'utf-8)))))
+           (yodao-web-dict (car (xml-get-children xml-data 'yodao-web-dict)))
+           (custom-translation (car (xml-get-children xml-data 'custom-translation))))
+      (format "%s\n\n%s"
+              (mapconcat (lambda(translation) (maple-translate-youdao-result translation 'content))
+                         (xml-get-children custom-translation 'translation) "\n")
+              (mapconcat (lambda(translation)
+                           (format "- %s:\n  %s" (maple-translate-youdao-result translation 'key)
+                                   (mapconcat
+                                    (lambda(tran) (string-trim (maple-translate-youdao-result tran 'value)))
+                                    (xml-get-children translation 'trans) "; ")))
+                         (xml-get-children yodao-web-dict 'web-translation) "\n")))))
 
 (defun maple-translate-youdao-search(word)
   "Search WORD."
-  (let ((url (format "https://dict.youdao.com/fsearch?client=deskdict&keyfrom=chrome.extension&q=%s&pos=-1
-&doctype=xml&xmlVersion=3.2&dogVersion=1.0&vendor=unknown&appVer=3.1.17.4208&le=eng" word)))
+  (let* ((url (format "https://dict.youdao.com/fsearch?client=deskdict&keyfrom=chrome.extension&q=%s&pos=-1
+&doctype=xml&xmlVersion=3.2&dogVersion=1.0&vendor=unknown&appVer=3.1.17.4208&le=eng" word))
+         (url-request-extra-headers '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"))))
     (with-current-buffer (url-retrieve-synchronously url)
+      (re-search-forward "^$" nil t)
       (prog1 (maple-translate-youdao-format (buffer-substring-no-properties (point-min) (point-max)))
         (kill-buffer (current-buffer))))))
 
