@@ -1,0 +1,26 @@
+* emacs-maple-translate
+  Translate word between chinese and english.
+
+** How to use?
+   #+begin_src elisp
+   (use-package maple-translate
+     :quelpa (:fetcher github :repo "honmaple/emacs-maple-translate")
+     :commands (maple-translate maple-translate+))
+   #+end_src
+
+   Or alternatively, you can download the repository and install manually by doing:
+   #+begin_src bash
+   git clone https://github.com/honmaple/emacs-maple-translate ~/.emacs.d/site-lisp/maple-translate
+   #+end_src
+
+   #+begin_src elisp
+   (use-package maple-translate
+     :ensure nil
+     :commands (maple-translate maple-translate+))
+   #+end_src
+
+** Customize
+   #+begin_src elisp
+   (add-to-list 'maple-translate:alist '(custom . custom-translate-function))
+   (setq maple-translate-engine 'custom)
+   #+end_src
