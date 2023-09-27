@@ -1,4 +1,4 @@
-;;; maple-translate-youdao.el ---  maple imenu configuration.	-*- lexical-binding: t -*-
+;;; maple-translate-youdao.el ---  translate with youdao.	-*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023 lin.jiang
 
@@ -29,32 +29,33 @@
   "Get result with NODE CHILD-NAME."
   (decode-coding-string (car (xml-node-children (car (xml-get-children node child-name)))) 'utf-8))
 
-(defun maple-translate-youdao-format(content)
-  "Format from search CONTENT."
-  (when content
-    (let* ((root (with-temp-buffer (insert content)
-                                   (xml-parse-region (point-min) (point-max))))
-           (xml-data (car root))
-           (yodao-web-dict (car (xml-get-children xml-data 'yodao-web-dict)))
-           (custom-translation (car (xml-get-children xml-data 'custom-translation))))
-      (format "%s\n\n%s"
-              (mapconcat (lambda(translation) (maple-translate-youdao-result translation 'content))
-                         (xml-get-children custom-translation 'translation) "\n")
-              (mapconcat (lambda(translation)
-                           (format "- %s:\n  %s" (maple-translate-youdao-result translation 'key)
-                                   (mapconcat
-                                    (lambda(tran) (string-trim (maple-translate-youdao-result tran 'value)))
-                                    (xml-get-children translation 'trans) "; ")))
-                         (xml-get-children yodao-web-dict 'web-translation) "\n")))))
+(defun maple-translate-youdao-format(dom)
+  "Format search result from youdao DOM."
+  (unless dom
+    (throw 'not-found nil))
+
+  (concat
+   (let ((result (cl-loop for child in (xml-get-children (car (xml-get-children (car dom) 'custom-translation)) 'translation)
+                          collect (maple-translate-youdao-result child 'content))))
+     (unless (null result)
+       (format "基本释义:\n%s\n\n" (string-join result "\n"))))
+
+   (let ((result (cl-loop for child in (xml-get-children (car (xml-get-children (car dom) 'yodao-web-dict)) 'web-translation)
+                          collect (format "- %s:\n  %s" (maple-translate-youdao-result child 'key)
+                                          (mapconcat
+                                           (lambda(tran) (string-trim (maple-translate-youdao-result tran 'value)))
+                                           (xml-get-children child 'trans) "; ")))))
+     (unless (null result)
+       (format "组词:\n%s" (string-join result "\n"))))))
 
 (defun maple-translate-youdao-search(word)
-  "Search WORD."
+  "Search WORD with youdao."
   (let* ((url (format "https://dict.youdao.com/fsearch?client=deskdict&keyfrom=chrome.extension&q=%s&pos=-1
-&doctype=xml&xmlVersion=3.2&dogVersion=1.0&vendor=unknown&appVer=3.1.17.4208&le=eng" word))
+&doctype=xml&xmlVersion=3.2&dogVersion=1.0&vendor=unknown&appVer=3.1.17.4208&le=eng" (url-hexify-string word)))
          (url-request-extra-headers '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"))))
     (with-current-buffer (url-retrieve-synchronously url)
       (re-search-forward "^$" nil t)
-      (prog1 (maple-translate-youdao-format (buffer-substring-no-properties (point-min) (point-max)))
+      (prog1 (maple-translate-youdao-format (xml-parse-region))
         (kill-buffer (current-buffer))))))
 
 (provide 'maple-translate-youdao)

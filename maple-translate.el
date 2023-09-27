@@ -1,4 +1,4 @@
-;;; maple-translate.el ---  maple imenu configuration.	-*- lexical-binding: t -*-
+;;; maple-translate.el ---  maple translate configuration.	-*- lexical-binding: t -*-
 
 ;; Copyright (C) 2023 lin.jiang
 
@@ -24,6 +24,7 @@
 
 ;;; Code:
 (require 'maple-translate-youdao)
+(require 'maple-translate-dictcn)
 
 (declare-function evil-make-overriding-map 'evil)
 
@@ -36,7 +37,8 @@
   :group 'maple-translate
   :type 'string)
 
-(defcustom maple-translate-alist '((youdao . maple-translate-youdao-search))
+(defcustom maple-translate-alist '((youdao . maple-translate-youdao-search)
+                                   (dictcn . maple-translate-dictcn-search))
   "Translate function with different engine."
   :group 'maple-translate
   :type '(alist :key-type symbol :value-type function))
@@ -57,23 +59,23 @@
   (with-current-buffer (get-buffer-create maple-translate-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
-      (insert (format "基本释义：\n%s\n" result))
+      (insert result)
       (maple-translate-mode)
       (goto-char (point-min)))
     (unless (get-buffer-window (current-buffer))
       (switch-to-buffer-other-window maple-translate-buffer))))
 
-(defun maple-translate-result()
-  "Show RESULT."
-  (let ((engine (cdr (or (assq maple-translate-engine maple-translate-alist) (assq t maple-translate-alist)))))
-    (if engine (funcall engine (maple-translate-word))
+(defun maple-translate-result(engine)
+  "Get result with ENGINE."
+  (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
+    (if fn (funcall fn (maple-translate-word))
       (error "No translate engine found"))))
 
 (defvar maple-translate-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "q" 'quit-window)
     map)
-  "Maple-imenu-mode keymap.")
+  "Maple-translate-mode keymap.")
 
 (define-derived-mode maple-translate-mode special-mode "maple-translate"
   "Major mode for maple translate.
@@ -86,15 +88,15 @@
 (defun maple-translate+()
   "Translate word at point and display result with buffer."
   (interactive)
-  (let ((result (maple-translate-result)))
+  (let ((result (maple-translate-result maple-translate-engine)))
     (maple-translate-show result)))
 
 ;;;###autoload
 (defun maple-translate()
   "Translate word at point and display result in echoarea."
   (interactive)
-  (let ((result (maple-translate-result)))
-    (princ (format "基本释义：\n%s\n" result))))
+  (let ((result (maple-translate-result maple-translate-engine)))
+    (princ result)))
 
 (provide 'maple-translate)
 ;;; maple-translate.el ends here
