@@ -21,6 +21,6 @@
 
 ** Customize
    #+begin_src elisp
-   (add-to-list 'maple-translate:alist '(custom . custom-translate-function))
+   (add-to-list 'maple-translate-alist '(custom . custom-translate-function))
    (setq maple-translate-engine 'custom)
    #+end_src

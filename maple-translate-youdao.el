@@ -53,7 +53,7 @@
   (let* ((url (format "https://dict.youdao.com/fsearch?client=deskdict&keyfrom=chrome.extension&q=%s&pos=-1
 &doctype=xml&xmlVersion=3.2&dogVersion=1.0&vendor=unknown&appVer=3.1.17.4208&le=eng" (url-hexify-string word)))
          (url-request-extra-headers '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"))))
-    (with-current-buffer (url-retrieve-synchronously url)
+    (with-current-buffer (url-retrieve-synchronously url t)
       (re-search-forward "^$" nil t)
       (prog1 (maple-translate-youdao-format (xml-parse-region))
         (kill-buffer (current-buffer))))))

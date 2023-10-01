@@ -70,7 +70,7 @@
   "Search WORD with dictcn."
   (let* ((url (format "https://dict.cn/search?q=%s" (url-hexify-string word)))
          (url-request-extra-headers '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36"))))
-    (with-current-buffer (url-retrieve-synchronously url)
+    (with-current-buffer (url-retrieve-synchronously url t)
       (re-search-forward "^$" nil t)
       (prog1 (maple-translate-dictcn-format (libxml-parse-html-region))
         (kill-buffer (current-buffer))))))
