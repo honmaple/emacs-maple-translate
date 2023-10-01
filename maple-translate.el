@@ -69,9 +69,16 @@
 
 (defun maple-translate-result(engine)
   "Get result with ENGINE."
-  (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
-    (if fn (funcall fn (maple-translate-word))
-      (error "No translate engine found"))))
+  (if (listp engine)
+      (string-join (cl-loop for e in engine
+                            collect (format "%s\n%s\n\n"
+                                            (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face)
+                                            (maple-translate-result e)))
+
+                   "\n")
+    (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
+      (if fn (funcall fn (maple-translate-word))
+        (error "No translate engine found")))))
 
 (defvar maple-translate-mode-map
   (let ((map (make-sparse-keymap)))
