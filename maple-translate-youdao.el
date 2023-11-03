@@ -59,10 +59,13 @@
      (unless (null result)
        (format "例句:\n%s" (string-join result "\n"))))))
 
-(defun maple-translate-youdao(text)
-  "Search TEXT with youdao."
-  (maple-translate-request (format "https://dict.youdao.com/result?word=%s&lang=en" (url-hexify-string text))
-    (maple-translate-youdao-format (libxml-parse-html-region))))
+(defun maple-translate-youdao(text &optional callback)
+  "Search TEXT with youdao, use async request if CALLBACK non-nil."
+  (let ((url (format "https://dict.youdao.com/result?word=%s&lang=en" (url-hexify-string text))))
+    (maple-translate-request url
+      :format (maple-translate-youdao-format (libxml-parse-html-region))
+      :headers t
+      :callback callback)))
 
 (provide 'maple-translate-youdao)
 ;;; maple-translate-youdao.el ends here

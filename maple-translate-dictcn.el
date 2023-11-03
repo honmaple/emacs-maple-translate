@@ -65,10 +65,13 @@
      (unless (null result)
        (format "例句:\n%s" (string-join result "\n"))))))
 
-(defun maple-translate-dictcn(word)
-  "Search WORD with dictcn."
-  (maple-translate-request (format "https://dict.cn/search?q=%s" (url-hexify-string word))
-    (maple-translate-dictcn-format (libxml-parse-html-region))))
+(defun maple-translate-dictcn(word &optional callback)
+  "Search WORD with dictcn, use async request if CALLBACK non-nil."
+  (let ((url (format "https://dict.cn/search?q=%s" (url-hexify-string word))))
+    (maple-translate-request url
+      :format (maple-translate-dictcn-format (libxml-parse-html-region))
+      :headers t
+      :callback callback)))
 
 (provide 'maple-translate-dictcn)
 ;;; maple-translate-dictcn.el ends here

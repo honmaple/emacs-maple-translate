@@ -91,8 +91,7 @@
                    (buffer-substring-no-properties (+ p idx-offset-bytes)
                                                    (+ p idx-offset-bytes 4))))
             (forward-char (+ idx-offset-bytes 4))
-            (puthash word (cons offset size) idx-ht)
-            )))
+            (puthash word (cons offset size) idx-ht))))
       (list ifo-ht idx-ht dict))))
 
 (defun stardict-lookup (dict word)
@@ -118,17 +117,17 @@
 
 (defun maple-translate-init()
   "Init sdcv dicts."
-  (setq maple-translate-sdcv--cache
+  (setq maple-translate-sdcv--init t
+        maple-translate-sdcv--cache
         (cl-loop for dicts in maple-translate-sdcv-dicts
                  collect (stardict-open (expand-file-name (cdr dicts) maple-translate-sdcv-dir) (car dicts))))
   (message "maple-translate-sdcv词典初始化成功"))
 
-(defun maple-translate-sdcv(word)
+(defun maple-translate-sdcv(word &optional _)
   "Search WORD with sdcv."
   (unless (or maple-translate-sdcv--cache maple-translate-sdcv--init)
-    (setq maple-translate-sdcv--init t)
     (run-with-idle-timer 0.1 nil 'maple-translate-init))
-  (if (and maple-translate-sdcv--init (not maple-translate-sdcv--cache))
+  (if (not maple-translate-sdcv--cache)
       (format "%s" "词典正在初始化，请稍后再试")
     (let (results)
       (dolist (dict maple-translate-sdcv--cache)

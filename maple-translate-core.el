@@ -56,11 +56,18 @@ example: a-tag/#b-id/.c-class[2]/*[1]."
 (defmacro maple-translate-request(url &rest body)
   "Request translate engine and call BODY by URL."
   (declare (indent defun))
-  `(let ((url-request-extra-headers maple-translate-request-headers))
-     (with-current-buffer (url-retrieve-synchronously ,url t)
-       (re-search-forward "^$" nil t)
-       (prog1 ,@body
-         (kill-buffer (current-buffer))))))
+  (cl-destructuring-bind (&key format callback headers) body
+    `(let ((url-request-extra-headers (when ,headers maple-translate-request-headers)))
+       (if ,callback
+           (url-retrieve ,url
+                         (lambda(_)
+                           (re-search-forward "^$" nil t)
+                           (prog1 (funcall ,callback ,format)
+                             (kill-buffer (current-buffer)))))
+         (with-current-buffer (url-retrieve-synchronously ,url t)
+           (re-search-forward "^$" nil t)
+           (prog1 ,format
+             (kill-buffer (current-buffer))))))))
 
 (provide 'maple-translate-core)
 ;;; maple-translate-core.el ends here

@@ -54,13 +54,12 @@
      (unless (null result)
        (format "例句:\n%s" (string-join result "\n"))))))
 
-(defun maple-translate-bing(word)
-  "Search WORD with bing."
+(defun maple-translate-bing(word &optional callback)
+  "Search WORD with bing, use async request if CALLBACK non-nil."
   (let ((url (format "https://www.bing.com/dict/search?mkt=zh-cn&q=%s" (url-hexify-string word))))
-    (with-current-buffer (url-retrieve-synchronously url t)
-      (re-search-forward "^$" nil t)
-      (prog1 (maple-translate-bing-format (dom-by-class (libxml-parse-html-region) "content"))
-        (kill-buffer (current-buffer))))))
+    (maple-translate-request url
+      :format (maple-translate-bing-format (dom-by-class (libxml-parse-html-region) "content"))
+      :callback callback)))
 
 (provide 'maple-translate-bing)
 ;;; maple-translate-bing.el ends here
