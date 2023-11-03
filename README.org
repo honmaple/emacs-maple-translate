@@ -25,6 +25,12 @@
    (setq maple-translate-engine 'custom)
    ;; or use multi engines
    (setq maple-translate-engine '(youdao dictcn custom))
+
+   ;; with offline sdcv
+   (setq maple-translate-sdcv-dir "~/.stardict/dicts")
+   (setq maple-translate-sdcv-dicts
+         '(("lazyworm-ec" . "stardict-lazyworm-ec-2.4.2")
+           ("lazyworm-ce" . "stardict-lazyworm-ce-2.4.2")))
    #+end_src
 
 ** Long sentence

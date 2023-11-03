@@ -23,6 +23,7 @@
 ;;
 
 ;;; Code:
+(require 'maple-translate-sdcv)
 (require 'maple-translate-bing)
 (require 'maple-translate-youdao)
 (require 'maple-translate-dictcn)
@@ -38,7 +39,8 @@
   :group 'maple-translate
   :type 'string)
 
-(defcustom maple-translate-alist '((bing   . maple-translate-bing)
+(defcustom maple-translate-alist '((sdcv   . maple-translate-sdcv)
+                                   (bing   . maple-translate-bing)
                                    (youdao . maple-translate-youdao)
                                    (dictcn . maple-translate-dictcn))
   "Translate function with different engine."
