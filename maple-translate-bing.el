@@ -23,7 +23,7 @@
 ;;
 
 ;;; Code:
-(require 'dom)
+(require 'maple-translate-core)
 
 (defun maple-translate-bing-format(dom)
   "Format seatch with bing DOM."
@@ -31,13 +31,13 @@
     (throw 'not-found nil))
 
   (concat
-   (let ((result (cl-loop for child in (dom-by-class (nth 0 (dom-children (dom-by-class dom "qdef"))) "b_primtxt")
+   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[0]/.b_primtxt")
                           when (consp child)
                           collect (dom-text child))))
      (unless (null result)
        (format "读音:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (dom-children (nth 1 (dom-children (dom-by-class dom "qdef"))))
+   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[1]/*")
                           when (consp child)
                           collect (format "%s %s"
                                           (dom-text (nth 2 child))
@@ -46,16 +46,15 @@
      (unless (null result)
        (format "基本释义:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (butlast (dom-children (dom-by-id dom "sentenceSeg")))
+   (let ((result (cl-loop for child in (maple-translate-dom-find dom "#sentenceSeg/.se_li")
                           when (consp child)
                           collect (format "- %s\n  %s"
-                                          (dom-texts (dom-by-class (nth 3 child) "sen_en") "")
-                                          (dom-texts (dom-by-class (nth 3 child) "sen_cn") "")))))
+                                          (dom-texts (maple-translate-dom-find child ".sen_en") "")
+                                          (dom-texts (maple-translate-dom-find child ".sen_cn") "")))))
      (unless (null result)
-       (format "例句:\n%s\n\n" (string-join result "\n")))))
-  )
+       (format "例句:\n%s" (string-join result "\n"))))))
 
-(defun maple-translate-bing-search(word)
+(defun maple-translate-bing(word)
   "Search WORD with bing."
   (let ((url (format "https://www.bing.com/dict/search?mkt=zh-cn&q=%s" (url-hexify-string word))))
     (with-current-buffer (url-retrieve-synchronously url t)

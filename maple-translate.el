@@ -38,9 +38,9 @@
   :group 'maple-translate
   :type 'string)
 
-(defcustom maple-translate-alist '((bing   . maple-translate-bing-search)
-                                   (youdao . maple-translate-youdao-search)
-                                   (dictcn . maple-translate-dictcn-search))
+(defcustom maple-translate-alist '((bing   . maple-translate-bing)
+                                   (youdao . maple-translate-youdao)
+                                   (dictcn . maple-translate-dictcn))
   "Translate function with different engine."
   :group 'maple-translate
   :type '(alist :key-type symbol :value-type function))
@@ -48,7 +48,7 @@
 (defcustom maple-translate-engine 'youdao
   "Translate engine."
   :group 'maple-translate
-  :type 'symbol)
+  :type '(or symbol list))
 
 (defun maple-translate-word()
   "Get translate word."

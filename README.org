@@ -23,4 +23,9 @@
    #+begin_src elisp
    (add-to-list 'maple-translate-alist '(custom . custom-translate-function))
    (setq maple-translate-engine 'custom)
+   ;; or use multi engines
+   (setq maple-translate-engine '(youdao dictcn custom))
    #+end_src
+
+** Long sentence
+   - [X] Youdao
