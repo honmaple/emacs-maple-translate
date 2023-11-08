@@ -25,6 +25,7 @@
 ;;; Code:
 (require 'maple-translate-sdcv)
 (require 'maple-translate-bing)
+(require 'maple-translate-iciba)
 (require 'maple-translate-youdao)
 (require 'maple-translate-dictcn)
 
@@ -41,6 +42,7 @@
 
 (defcustom maple-translate-alist '((sdcv   . maple-translate-sdcv)
                                    (bing   . maple-translate-bing)
+                                   (iciba  . maple-translate-iciba)
                                    (youdao . maple-translate-youdao)
                                    (dictcn . maple-translate-dictcn))
   "Translate function with different engine."
