@@ -37,6 +37,12 @@
      (unless (null result)
        (format "翻译:\n%s\n\n" (string-join result "\n"))))
 
+   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".ec dict-module/.trans-container/.phone_con/.per-phone")
+                          when (consp child)
+                          collect (dom-texts child))))
+     (unless (null result)
+       (format "读音:\n%s\n\n" (string-join result "\n"))))
+
    (let ((result (cl-loop for child in (maple-translate-dom-find dom ".simple dict-module/.trans-container/.word-exp")
                           when (consp child)
                           collect (dom-texts child))))

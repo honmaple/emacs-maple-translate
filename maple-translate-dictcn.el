@@ -31,6 +31,15 @@
     (throw 'not-found nil))
 
   (concat
+   (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".word/.phonetic/*"))
+                          when (consp child)
+                          collect
+                          (format "%s %s"
+                                  (string-trim (dom-text child))
+                                  (dom-text (maple-translate-dom-find child "bdo"))))))
+     (unless (null result)
+       (format "读音:\n%s\n\n" (string-join result "\n"))))
+
    (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".dict-basic-ul/li"))
                           when (consp child)
                           collect (format "%s %s"
