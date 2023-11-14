@@ -78,7 +78,7 @@
   "Search WORD with dictcn, use async request if CALLBACK non-nil."
   (let ((url (format "https://dict.cn/search?q=%s" (url-hexify-string word))))
     (maple-translate-request url
-      :format (maple-translate-dictcn-format (libxml-parse-html-region))
+      :format (maple-translate-dictcn-format (libxml-parse-html-region (point)))
       :headers t
       :callback callback)))
 

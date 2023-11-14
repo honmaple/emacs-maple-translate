@@ -69,7 +69,7 @@
   "Search TEXT with youdao, use async request if CALLBACK non-nil."
   (let ((url (format "https://dict.youdao.com/result?word=%s&lang=en" (url-hexify-string text))))
     (maple-translate-request url
-      :format (maple-translate-youdao-format (libxml-parse-html-region))
+      :format (maple-translate-youdao-format (libxml-parse-html-region (point)))
       :headers t
       :callback callback)))
 

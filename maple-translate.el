@@ -28,6 +28,7 @@
 (require 'maple-translate-iciba)
 (require 'maple-translate-youdao)
 (require 'maple-translate-dictcn)
+(require 'maple-translate-google)
 
 (declare-function evil-make-overriding-map 'evil)
 
@@ -44,7 +45,8 @@
                                    (bing   . maple-translate-bing)
                                    (iciba  . maple-translate-iciba)
                                    (youdao . maple-translate-youdao)
-                                   (dictcn . maple-translate-dictcn))
+                                   (dictcn . maple-translate-dictcn)
+                                   (google . maple-translate-google))
   "Translate function with different engine."
   :group 'maple-translate
   :type '(alist :key-type symbol :value-type function))

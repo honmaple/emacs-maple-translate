@@ -58,7 +58,7 @@
   "Search WORD with bing, use async request if CALLBACK non-nil."
   (let ((url (format "https://www.bing.com/dict/search?mkt=zh-cn&q=%s" (url-hexify-string word))))
     (maple-translate-request url
-      :format (maple-translate-bing-format (dom-by-class (libxml-parse-html-region) "content"))
+      :format (maple-translate-bing-format (dom-by-class (libxml-parse-html-region (point)) "content"))
       :callback callback)))
 
 (provide 'maple-translate-bing)

@@ -67,7 +67,7 @@
   "Translate TEXT with iciba, use async request if CALLBACK non-nil."
   (let ((url (format "https://www.iciba.com/word?w=%s" (string-replace "%20" "+" (url-hexify-string text)))))
     (maple-translate-request url
-      :format (maple-translate-iciba-format (libxml-parse-html-region))
+      :format (maple-translate-iciba-format (libxml-parse-html-region (point)))
       :headers t
       :callback callback)))
 

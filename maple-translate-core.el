@@ -53,19 +53,28 @@ example: a-tag/#b-id/.c-class[2]/*[1]."
            else return dom)
   dom)
 
+(defun maple-translate-query-string(params)
+  "Convert PARAMS to query string."
+  (mapconcat #'(lambda (p)
+                 (format "%s=%s"
+                         (url-hexify-string (car p))
+                         (url-hexify-string (cdr p))))
+             params "&"))
+
 (defmacro maple-translate-request(url &rest body)
   "Request translate engine and call BODY by URL."
   (declare (indent defun))
-  (cl-destructuring-bind (&key format callback headers) body
-    `(let ((url-request-extra-headers (when ,headers maple-translate-request-headers)))
+  (cl-destructuring-bind (&key format callback headers proxies) body
+    `(let ((url-proxy-services (or ,proxies url-proxy-services))
+           (url-request-extra-headers (when ,headers maple-translate-request-headers)))
        (if ,callback
            (url-retrieve ,url
                          (lambda(_)
-                           (re-search-forward "^$" nil t)
+                           (goto-char url-http-end-of-headers)
                            (prog1 (funcall ,callback ,format)
                              (kill-buffer (current-buffer)))))
          (with-current-buffer (url-retrieve-synchronously ,url t)
-           (re-search-forward "^$" nil t)
+           (goto-char url-http-end-of-headers)
            (prog1 ,format
              (kill-buffer (current-buffer))))))))
 

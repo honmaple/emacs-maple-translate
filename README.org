@@ -26,6 +26,12 @@
    ;; or use multi engines
    (setq maple-translate-engine '(youdao dictcn custom))
 
+   ;; with google translate
+   (setq maple-translate-google-url "https://translate.googleapis.com/translate_a/single")
+   (setq maple-translate-google-proxies
+         '(("http" . "127.0.0.1:1086")
+           ("https" . "127.0.0.1:1086")))
+
    ;; with offline sdcv
    (setq maple-translate-sdcv-dir "~/.stardict/dicts")
    (setq maple-translate-sdcv-dicts
@@ -35,3 +41,4 @@
 
 ** Long sentence
    - [X] Youdao
+   - [X] Google
