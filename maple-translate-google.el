@@ -84,7 +84,7 @@
                   ("oe"     . "UTF-8")
                   ("hl"     . ,maple-translate-google-hl)
                   ("sl"     . "auto")
-                  ("tl"     . ,(if (string-match (format "\\cC\\{%s\\}" (length text)) text) "en" "zh-CN"))
+                  ("tl"     . ,(if (string-match "\\cc" text) "en" "zh-CN"))
                   ("q"      . ,text)
                   ("dt"     . "bd")
                   ("dt"     . "ex")
