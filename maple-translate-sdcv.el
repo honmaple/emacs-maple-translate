@@ -112,8 +112,9 @@
             (buffer-substring-no-properties (byte-to-position (1+ offset))
                                             (byte-to-position (+ 1 offset size))))
         (with-temp-buffer
-          (insert-file-contents (nth 2 dict) nil offset (+ offset size))
-          (buffer-string))))))
+          (let ((inhibit-message t))
+            (insert-file-contents (nth 2 dict) nil offset (+ offset size)))
+          (buffer-substring-no-properties (point-min) (point-max)))))))
 
 (defun maple-translate-init()
   "Init sdcv dicts."

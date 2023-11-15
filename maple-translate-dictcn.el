@@ -27,7 +27,7 @@
 
 (defun maple-translate-dictcn-format(dom)
   "Format seatch with dictcn DOM."
-  (unless (dom-by-class dom "dict-basic-ul")
+  (unless dom
     (throw 'not-found nil))
 
   (concat

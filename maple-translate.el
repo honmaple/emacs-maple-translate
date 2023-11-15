@@ -62,8 +62,26 @@
       (buffer-substring-no-properties (region-beginning) (region-end))
     (thing-at-point 'word t)))
 
-(defun maple-translate-show(result)
-  "Show RESULT."
+(defun maple-translate-show(fn)
+  "Show translate result with FN."
+  (let ((result (maple-translate-result maple-translate-engine)))
+    (if (string= result "") (princ "No result found")
+      (funcall fn result))))
+
+(defun maple-translate-result(engine)
+  "Get result with ENGINE."
+  (if (listp engine)
+      (let ((results (cl-loop for e in engine
+                              collect (let ((result (maple-translate-result e)))
+                                        (if (string= result "") ""
+                                          (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))))))
+        (string-join (cl-remove "" results) "\n\n"))
+    (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
+      (if fn (string-trim (funcall fn (maple-translate-word)))
+        (error "No translate engine found")))))
+
+(defun maple-translate-show-in-buffer(result)
+  "Show RESULT in buffer."
   (with-current-buffer (get-buffer-create maple-translate-buffer)
     (let ((inhibit-read-only t))
       (erase-buffer)
@@ -72,19 +90,6 @@
       (goto-char (point-min)))
     (unless (get-buffer-window (current-buffer))
       (switch-to-buffer-other-window maple-translate-buffer))))
-
-(defun maple-translate-result(engine)
-  "Get result with ENGINE."
-  (if (listp engine)
-      (string-join (cl-loop for e in engine
-                            collect (format "%s\n%s\n\n"
-                                            (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face)
-                                            (maple-translate-result e)))
-
-                   "\n")
-    (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
-      (if fn (funcall fn (maple-translate-word))
-        (error "No translate engine found")))))
 
 (defvar maple-translate-mode-map
   (let ((map (make-sparse-keymap)))
@@ -101,17 +106,15 @@
 
 ;;;###autoload
 (defun maple-translate+()
-  "Translate word at point and display result with buffer."
+  "Translate word at point and display result in buffer."
   (interactive)
-  (let ((result (maple-translate-result maple-translate-engine)))
-    (maple-translate-show result)))
+  (maple-translate-show 'maple-translate-show-in-buffer))
 
 ;;;###autoload
 (defun maple-translate()
   "Translate word at point and display result in echoarea."
   (interactive)
-  (let ((result (maple-translate-result maple-translate-engine)))
-    (princ result)))
+  (maple-translate-show 'princ))
 
 (provide 'maple-translate)
 ;;; maple-translate.el ends here
