@@ -27,52 +27,50 @@
 
 (defun maple-translate-dictcn-format(dom)
   "Format seatch with dictcn DOM."
-  (unless dom
-    (throw 'not-found nil))
+  (when dom
+    (concat
+     (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".word/.phonetic/*"))
+                            when (consp child)
+                            collect
+                            (format "%s %s"
+                                    (string-trim (dom-text child))
+                                    (dom-text (maple-translate-dom-find child "bdo"))))))
+       (unless (null result)
+         (format "读音:\n%s\n\n" (string-join result "\n"))))
 
-  (concat
-   (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".word/.phonetic/*"))
-                          when (consp child)
-                          collect
-                          (format "%s %s"
-                                  (string-trim (dom-text child))
-                                  (dom-text (maple-translate-dom-find child "bdo"))))))
-     (unless (null result)
-       (format "读音:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".dict-basic-ul/li"))
+                            when (consp child)
+                            collect (format "%s %s"
+                                            (dom-text (maple-translate-dom-find child "span"))
+                                            (dom-text (maple-translate-dom-find child "strong"))))))
+       (unless (null result)
+         (format "基本释义:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (butlast (maple-translate-dom-find dom ".dict-basic-ul/li"))
-                          when (consp child)
-                          collect (format "%s %s"
-                                          (dom-text (maple-translate-dom-find child "span"))
-                                          (dom-text (maple-translate-dom-find child "strong"))))))
-     (unless (null result)
-       (format "基本释义:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".layout detail/*")
+                            when (consp child)
+                            collect (pcase (dom-tag child)
+                                      ('span
+                                       (format "%s " (string-trim (dom-text child))))
+                                      ('ol
+                                       (format "%s\n" (string-join (cl-loop for li in (dom-children child)
+                                                                            when (consp li)
+                                                                            collect (dom-text li))
+                                                                   "; ")))))))
+       (unless (null result)
+         (format "详尽释义:\n%s\n\n" (string-join result))))
 
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".layout detail/*")
-                          when (consp child)
-                          collect (pcase (dom-tag child)
-                                    ('span
-                                     (format "%s " (string-trim (dom-text child))))
-                                    ('ol
-                                     (format "%s\n" (string-join (cl-loop for li in (dom-children child)
-                                                                          when (consp li)
-                                                                          collect (dom-text li))
-                                                                 "; ")))))))
-     (unless (null result)
-       (format "详尽释义:\n%s\n\n" (string-join result))))
-
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".layout sort/*")
-                          when (consp child)
-                          collect (pcase (dom-tag child)
-                                    ('div
-                                     (format "%s " (string-trim (dom-text (dom-by-tag child 'b)))))
-                                    ('ol
-                                     (format "%s\n" (string-join (cl-loop for li in (dom-children child)
-                                                                          when (consp li)
-                                                                          collect (format "- %s\n  %s" (nth 2 li) (nth 4 li)))
-                                                                 "\n")))))))
-     (unless (null result)
-       (format "例句:\n%s" (string-join result "\n"))))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".layout sort/*")
+                            when (consp child)
+                            collect (pcase (dom-tag child)
+                                      ('div
+                                       (format "%s " (string-trim (dom-text (dom-by-tag child 'b)))))
+                                      ('ol
+                                       (format "%s\n" (string-join (cl-loop for li in (dom-children child)
+                                                                            when (consp li)
+                                                                            collect (format "- %s\n  %s" (nth 2 li) (nth 4 li)))
+                                                                   "\n")))))))
+       (unless (null result)
+         (format "例句:\n%s" (string-join result "\n")))))))
 
 (defun maple-translate-dictcn(word &optional callback)
   "Search WORD with dictcn, use async request if CALLBACK non-nil."

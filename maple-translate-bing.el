@@ -27,32 +27,30 @@
 
 (defun maple-translate-bing-format(dom)
   "Format seatch with bing DOM."
-  (unless dom
-    (throw 'not-found nil))
+  (when dom
+    (concat
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[0]/.b_primtxt")
+                            when (consp child)
+                            collect (dom-text child))))
+       (unless (null result)
+         (format "读音:\n%s\n\n" (string-join result "\n"))))
 
-  (concat
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[0]/.b_primtxt")
-                          when (consp child)
-                          collect (dom-text child))))
-     (unless (null result)
-       (format "读音:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[1]/*")
+                            when (consp child)
+                            collect (format "%s %s"
+                                            (dom-text (nth 2 child))
+                                            (dom-texts (nth 3 child) "")))))
 
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".qdef/*[1]/*")
-                          when (consp child)
-                          collect (format "%s %s"
-                                          (dom-text (nth 2 child))
-                                          (dom-texts (nth 3 child) "")))))
+       (unless (null result)
+         (format "基本释义:\n%s\n\n" (string-join result "\n"))))
 
-     (unless (null result)
-       (format "基本释义:\n%s\n\n" (string-join result "\n"))))
-
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom "#sentenceSeg/.se_li")
-                          when (consp child)
-                          collect (format "- %s\n  %s"
-                                          (dom-texts (maple-translate-dom-find child ".sen_en") "")
-                                          (dom-texts (maple-translate-dom-find child ".sen_cn") "")))))
-     (unless (null result)
-       (format "例句:\n%s" (string-join result "\n"))))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom "#sentenceSeg/.se_li")
+                            when (consp child)
+                            collect (format "- %s\n  %s"
+                                            (dom-texts (maple-translate-dom-find child ".sen_en") "")
+                                            (dom-texts (maple-translate-dom-find child ".sen_cn") "")))))
+       (unless (null result)
+         (format "例句:\n%s" (string-join result "\n")))))))
 
 (defun maple-translate-bing(word &optional callback)
   "Search WORD with bing, use async request if CALLBACK non-nil."

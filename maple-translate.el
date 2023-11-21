@@ -77,7 +77,7 @@
                                           (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))))))
         (string-join (cl-remove "" results) "\n\n"))
     (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
-      (if fn (string-trim (funcall fn (maple-translate-word)))
+      (if fn (string-trim (or (funcall fn (maple-translate-word)) ""))
         (error "No translate engine found")))))
 
 (defun maple-translate-show-in-buffer(result)

@@ -27,43 +27,41 @@
 
 (defun maple-translate-youdao-format(dom)
   "Format seatch with bing DOM TEXT."
-  (unless dom
-    (throw 'not-found nil))
+  (when dom
+    (concat
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".fanyi dict-module/.trans-container/.trans-content")
+                            when (consp child)
+                            collect (format "- %s" (dom-text child)))))
+       (unless (null result)
+         (format "翻译:\n%s\n\n" (string-join result "\n"))))
 
-  (concat
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".fanyi dict-module/.trans-container/.trans-content")
-                          when (consp child)
-                          collect (format "- %s" (dom-text child)))))
-     (unless (null result)
-       (format "翻译:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".ec dict-module/.trans-container/.phone_con/.per-phone")
+                            when (consp child)
+                            collect (dom-texts child))))
+       (unless (null result)
+         (format "读音:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".ec dict-module/.trans-container/.phone_con/.per-phone")
-                          when (consp child)
-                          collect (dom-texts child))))
-     (unless (null result)
-       (format "读音:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".simple dict-module/.trans-container/.word-exp")
+                            when (consp child)
+                            collect (dom-texts child))))
+       (unless (null result)
+         (format "基本释义:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".simple dict-module/.trans-container/.word-exp")
-                          when (consp child)
-                          collect (dom-texts child))))
-     (unless (null result)
-       (format "基本释义:\n%s\n\n" (string-join result "\n"))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".web_trans dict-module/.trans-container/.webPhrase/.mcols-layout")
+                            when (consp child)
+                            collect (format "- %s\n  %s"
+                                            (dom-text (maple-translate-dom-find child ".point"))
+                                            (dom-text (maple-translate-dom-find child ".sen-phrase"))))))
+       (unless (null result)
+         (format "组词:\n%s\n\n" (string-join result "\n"))))
 
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".web_trans dict-module/.trans-container/.webPhrase/.mcols-layout")
-                          when (consp child)
-                          collect (format "- %s\n  %s"
-                                          (dom-text (maple-translate-dom-find child ".point"))
-                                          (dom-text (maple-translate-dom-find child ".sen-phrase"))))))
-     (unless (null result)
-       (format "组词:\n%s\n\n" (string-join result "\n"))))
-
-   (let ((result (cl-loop for child in (maple-translate-dom-find dom ".blng_sents_part dict-module/.trans-container/.mcols-layout")
-                          when (consp child)
-                          collect (format "- %s\n  %s"
-                                          (dom-texts (maple-translate-dom-find child ".col2/.word-exp[0]"))
-                                          (dom-texts (maple-translate-dom-find child ".col2/.word-exp[1]"))))))
-     (unless (null result)
-       (format "例句:\n%s" (string-join result "\n"))))))
+     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".blng_sents_part dict-module/.trans-container/.mcols-layout")
+                            when (consp child)
+                            collect (format "- %s\n  %s"
+                                            (dom-texts (maple-translate-dom-find child ".col2/.word-exp[0]"))
+                                            (dom-texts (maple-translate-dom-find child ".col2/.word-exp[1]"))))))
+       (unless (null result)
+         (format "例句:\n%s" (string-join result "\n")))))))
 
 (defun maple-translate-youdao(text &optional callback)
   "Search TEXT with youdao, use async request if CALLBACK non-nil."
