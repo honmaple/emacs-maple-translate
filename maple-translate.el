@@ -58,26 +58,30 @@
 
 (defun maple-translate-word()
   "Get translate word."
-  (if (use-region-p)
-      (buffer-substring-no-properties (region-beginning) (region-end))
-    (thing-at-point 'word t)))
+  (let ((word (string-trim (or (if (use-region-p)
+                                   (buffer-substring-no-properties (region-beginning) (region-end))
+                                 (thing-at-point 'word t))
+                               ""))))
+    (if (string= word "") (read-from-minibuffer "Translate word: ") word)))
 
-(defun maple-translate-show(fn)
-  "Show translate result with FN."
-  (let ((result (maple-translate-result maple-translate-engine)))
+(defun maple-translate-show(word fn)
+  "Show translate result of WORD with FN."
+  (let ((result (maple-translate-result word)))
     (if (string= result "") (princ "No result found")
       (funcall fn result))))
 
-(defun maple-translate-result(engine)
-  "Get result with ENGINE."
+(defun maple-translate-result(word &optional engine)
+  "Get translate result of WORD with ENGINE."
+  (unless engine (setq engine maple-translate-engine))
+
   (if (listp engine)
       (let ((results (cl-loop for e in engine
-                              collect (let ((result (maple-translate-result e)))
-                                        (if (string= result "") ""
+                              collect (let ((result (maple-translate-result word e)))
+                                        (when (string= result "")
                                           (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))))))
-        (string-join (cl-remove "" results) "\n\n"))
-    (let ((fn (cdr (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))))
-      (if fn (string-trim (or (funcall fn (maple-translate-word)) ""))
+        (string-join (cl-remove nil results) "\n\n"))
+    (let ((fn (or (assq engine maple-translate-alist) (assq t maple-translate-alist))))
+      (if fn (string-trim (or (funcall (cdr fn) word) ""))
         (error "No translate engine found")))))
 
 (defun maple-translate-show-in-buffer(result)
@@ -105,16 +109,16 @@
     (evil-make-overriding-map maple-translate-mode-map 'normal)))
 
 ;;;###autoload
-(defun maple-translate+()
-  "Translate word at point and display result in buffer."
-  (interactive)
-  (maple-translate-show 'maple-translate-show-in-buffer))
+(defun maple-translate+(word)
+  "Translate WORD and display result in buffer."
+  (interactive (list (maple-translate-word)))
+  (maple-translate-show word 'maple-translate-show-in-buffer))
 
 ;;;###autoload
-(defun maple-translate()
-  "Translate word at point and display result in echoarea."
-  (interactive)
-  (maple-translate-show 'princ))
+(defun maple-translate(word)
+  "Translate WORD and display result in echoarea."
+  (interactive (list (maple-translate-word)))
+  (maple-translate-show word 'princ))
 
 (provide 'maple-translate)
 ;;; maple-translate.el ends here
