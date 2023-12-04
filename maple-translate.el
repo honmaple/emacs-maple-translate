@@ -77,7 +77,7 @@
   (if (listp engine)
       (let ((results (cl-loop for e in engine
                               collect (let ((result (maple-translate-result word e)))
-                                        (when (string= result "")
+                                        (unless (string= result "")
                                           (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))))))
         (string-join (cl-remove nil results) "\n\n"))
     (let ((fn (or (assq engine maple-translate-alist) (assq t maple-translate-alist))))
