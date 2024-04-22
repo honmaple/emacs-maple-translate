@@ -1,6 +1,6 @@
 ;;; maple-translate-sdcv.el ---  translate with sdcv.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 lin.jiang
+;; Copyright (C) 2023-2024 lin.jiang
 
 ;; URL: https://github.com/honmaple/emacs-maple-translate
 
@@ -24,8 +24,12 @@
 ;;
 
 ;;; Code:
+(require 'json)
+(require 'maple-translate-core)
+
 (defvar maple-translate-sdcv-dir user-emacs-directory)
 (defvar maple-translate-sdcv-dicts '())
+(defvar maple-translate-sdcv-program (executable-find "sdcv"))
 (defvar maple-translate-sdcv--init nil)
 (defvar maple-translate-sdcv--cache nil)
 
@@ -116,6 +120,23 @@
             (insert-file-contents (nth 2 dict) nil offset (+ offset size)))
           (buffer-substring-no-properties (point-min) (point-max)))))))
 
+
+(defun maple-translate-sdcv-format()
+  "Format result with sdcv output."
+  (let ((results (cl-loop for index from 0
+                          for dicts in maple-translate-sdcv-dicts
+                          collect
+                          (progn
+                            (goto-char (point-min))
+                            (forward-line index)
+                            (string-join (cl-loop for child across-ref (json-read-from-string (decode-coding-string (thing-at-point 'line t) 'utf-8))
+                                                  collect (format "%s: %s"
+                                                                  (alist-get 'dict child)
+                                                                  (alist-get 'definition child)))
+                                         "\n\n")))))
+    (unless (null results)
+      (string-join (cl-remove nil results) "\n\n"))))
+
 (defun maple-translate-init()
   "Init sdcv dicts."
   (setq maple-translate-sdcv--init t
@@ -124,18 +145,26 @@
                  collect (stardict-open (expand-file-name (cdr dicts) maple-translate-sdcv-dir) (car dicts))))
   (message "maple-translate-sdcv词典初始化成功"))
 
-(defun maple-translate-sdcv(word &optional _)
-  "Search WORD with sdcv."
-  (unless (or maple-translate-sdcv--cache maple-translate-sdcv--init)
-    (run-with-idle-timer 0.1 nil 'maple-translate-init))
-  (if (not maple-translate-sdcv--cache)
-      (format "%s" "词典正在初始化，请稍后再试")
-    (let (results)
-      (dolist (dict maple-translate-sdcv--cache)
-        (let ((result (stardict-lookup dict word)))
-          (when result (push result results))))
-      (unless (null results)
-        (string-join results "\n")))))
+(defun maple-translate-sdcv(word &optional callback)
+  "Search WORD with sdcv, use async request if CALLBACK non-nil."
+  (if maple-translate-sdcv-program
+      (maple-translate-execute maple-translate-sdcv-program
+        :args (append '("-n" "-x" "-j" "-0" "-1" "-2")
+                      (cl-loop for dict in maple-translate-sdcv-dicts
+                               collect (expand-file-name (cdr dict) maple-translate-sdcv-dir))
+                      (list word))
+        :format (maple-translate-sdcv-format)
+        :callback callback)
+    (unless (or maple-translate-sdcv--cache maple-translate-sdcv--init)
+      (run-with-idle-timer 0.1 nil 'maple-translate-init))
+    (if (not maple-translate-sdcv--cache)
+        (format "%s" "词典正在初始化，请稍后再试")
+      (let (results)
+        (dolist (dict maple-translate-sdcv--cache)
+          (let ((result (stardict-lookup dict word)))
+            (when result (push result results))))
+        (unless (null results)
+          (string-join results "\n"))))))
 
 (provide 'maple-translate-sdcv)
 ;;; maple-translate-sdcv.el ends here

@@ -39,6 +39,17 @@
            ("lazyworm-ce" . "stardict-lazyworm-ce-2.4.2")))
    #+end_src
 
+** Offline
+   - [X] Sdcv
+
 ** Long sentence
    - [X] Youdao
    - [X] Google
+
+** Supported Engines
+   - youdao
+   - dictcn
+   - iciba
+   - bing
+   - google
+   - sdcv

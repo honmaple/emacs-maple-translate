@@ -1,6 +1,6 @@
 ;;; maple-translate-core.el ---  translate from chinese to english.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 lin.jiang
+;; Copyright (C) 2023-2024 lin.jiang
 
 ;; URL: https://github.com/honmaple/emacs-maple-translate
 
@@ -77,6 +77,23 @@ example: a-tag/#b-id/.c-class[2]/*[1]."
            (goto-char url-http-end-of-headers)
            (prog1 ,format
              (kill-buffer (current-buffer))))))))
+
+(defmacro maple-translate-execute(program &rest body)
+  "Execute translate command by PROGRAM with some BODY."
+  (declare (indent defun))
+  (cl-destructuring-bind (&key args format callback) body
+    `(if ,callback
+         (let ((name (format "maple-translate-process %s" ,program)))
+           (set-process-sentinel
+            (apply 'start-process name (format "*%s*" name) ,program ,args)
+            (lambda(process _)
+              (unless (process-live-p process)
+                (with-current-buffer (process-buffer process)
+                  (prog1 (funcall ,callback ,format)
+                    (kill-buffer (current-buffer))))))))
+       (with-temp-buffer
+         (apply 'call-process ,program nil t nil ,args)
+         ,format))))
 
 (provide 'maple-translate-core)
 ;;; maple-translate-core.el ends here

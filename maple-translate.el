@@ -1,6 +1,6 @@
 ;;; maple-translate.el ---  maple translate configuration.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2023 lin.jiang
+;; Copyright (C) 2023-2024 lin.jiang
 
 ;; URL: https://github.com/honmaple/emacs-maple-translate
 
