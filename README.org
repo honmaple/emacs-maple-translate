@@ -21,47 +21,42 @@
 
 ** Usage
 
-In any buffer, run =M-x maple-translate= to translate the selected text or the
-word at point. By default, it translates the input to Chinese, as the default
-backends are for English-Chinese translation. See the Customization section for
-configuring other backends.
+   In any buffer, run =M-x maple-translate= to translate the selected text or the
+   word at point. By default, it translates the input to Chinese, as the default
+   backends are for English-Chinese translation. See the Customization section for
+   configuring other backends.
 
 ** Customization
-*** Basic settings
-    #+begin_src emacs-lisp
-      (use-package maple-translate
-        :load-path (lambda() (expand-file-name "~/.emacs.d/downloads/emacs-maple-translate"))
-        :commands (maple-translate maple-translate+)
-        :custom (maple-translate-engine 'youdao)
-        :bind (:map global-map
-                    ("C-h D" . maple-translate)
-                    ("C-h d" . maple-translate+))
-        )
-    #+end_src
-    The above example performs the following actions:
-    - Loads the =emacs-maple-translate= repository from =~/.emacs.d/downloads=.
-    - Sets =youdao= as the backend.
-    - Binds =maple-translate= to =C-h D= and =maple-translate+= to =C-h d=.
+   #+begin_src elisp
+   (setq maple-translate-engine 'youdao)
+   ;; or use multi engines
+   (setq maple-translate-engine '(youdao dictcn))
+   ;; custom result with different section
+   (setq maple-translate-section '(phonetic basic detail morphology phrase sentence))
 
-*** Advanced settings
-    #+begin_src elisp
-    (add-to-list 'maple-translate-alist '(custom . custom-translate-function))
-    (setq maple-translate-engine 'custom)
-    ;; or use multi engines
-    (setq maple-translate-engine '(youdao dictcn custom))
+   ;; with google translate
+   (setq maple-translate-google-url "https://translate.googleapis.com/translate_a/single")
+   (setq maple-translate-google-proxies
+         '(("http" . "127.0.0.1:1086")
+           ("https" . "127.0.0.1:1086")))
 
-    ;; with google translate
-    (setq maple-translate-google-url "https://translate.googleapis.com/translate_a/single")
-    (setq maple-translate-google-proxies
-          '(("http" . "127.0.0.1:1086")
-            ("https" . "127.0.0.1:1086")))
+   ;; with offline sdcv
+   (setq maple-translate-sdcv-dir "~/.stardict/dicts")
+   (setq maple-translate-sdcv-dicts
+         '(("lazyworm-ec" . "stardict-lazyworm-ec-2.4.2")
+           ("lazyworm-ce" . "stardict-lazyworm-ce-2.4.2")))
+   #+end_src
 
-    ;; with offline sdcv
-    (setq maple-translate-sdcv-dir "~/.stardict/dicts")
-    (setq maple-translate-sdcv-dicts
-          '(("lazyworm-ec" . "stardict-lazyworm-ec-2.4.2")
-            ("lazyworm-ce" . "stardict-lazyworm-ce-2.4.2")))
-    #+end_src
+   Custom translate engine
+   #+begin_src elisp
+   (defun custom-translate-engine(text &optional callback)
+     (if (string= text "word")
+         (list (cons 'basic "单词"))
+       (list (cons 'basic "word"))))
+
+   (add-to-list 'maple-translate-alist '(custom . custom-translate-engine))
+   (setq maple-translate-engine 'custom)
+   #+end_src
 
 ** Offline
    - [X] Sdcv

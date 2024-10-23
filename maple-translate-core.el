@@ -23,9 +23,11 @@
 ;;
 
 ;;; Code:
+(require 'url)
 (require 'dom)
 
-(defvar maple-translate-request-headers '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36")))
+(defvar maple-translate-request-headers
+  '(("User-Agent" . "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.0.0 Safari/537.36")))
 
 (defun maple-translate-dom-by-key(dom key)
   "Find DOM by KEY."

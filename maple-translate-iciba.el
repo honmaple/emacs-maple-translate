@@ -28,38 +28,35 @@
 (defun maple-translate-iciba-format(dom)
   "Format seatch with iciba DOM."
   (when dom
-    (concat
-     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Mean_mean/.Mean_symbols/li")
-                            when (consp child)
-                            collect (dom-text child))))
-       (unless (null result)
-         (format "读音:\n%s\n\n" (string-join result "\n"))))
+    (let (results)
+      (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Mean_mean/.Mean_symbols/li")
+                             when (consp child)
+                             collect (dom-text child))))
+        (unless (null result)
+          (push (cons 'phonetic (string-join result "\n")) results)))
 
-     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Mean_definition/.Mean_part/li")
-                            when (consp child)
-                            collect (dom-texts child ""))))
+      (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Mean_definition/.Mean_part/li")
+                             when (consp child)
+                             collect (dom-texts child ""))))
 
-       (unless (null result)
-         (format "基本释义:\n%s\n\n" (string-join result "\n"))))
+        (unless (null result)
+          (push (cons 'basic (string-join result "\n")) results)))
 
-     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Morphology_morphology/li")
-                            when (consp child)
-                            collect (dom-texts child ""))))
+      (let ((result (cl-loop for child in (maple-translate-dom-find dom ".Morphology_morphology/li")
+                             when (consp child)
+                             collect (dom-texts child ""))))
 
-       (unless (null result)
-         (format "词态变化:\n%s\n\n" (string-join result "\n"))))
+        (unless (null result)
+          (push (cons 'morphology (string-join result "\n")) results)))
 
-     (let ((result (cl-loop for child in (maple-translate-dom-find dom ".SceneSentence_scene/.NormalSentence_sentence")
-                            when (consp child)
-                            collect (format "- %s\n  %s"
-                                            (dom-texts (maple-translate-dom-find child ".NormalSentence_en") "")
-                                            (dom-texts (maple-translate-dom-find child ".NormalSentence_cn") "")))))
-       (unless (null result)
-         (format "例句:\n%s" (string-join result "\n"))))
-
-     (let ((result (maple-translate-dom-find dom ".Mean_definition/.Mean_trans/p[0]")))
-       (unless (null result)
-         (format "翻译:\n%s" (dom-texts result)))))))
+      (let ((result (cl-loop for child in (maple-translate-dom-find dom ".SceneSentence_scene/.NormalSentence_sentence")
+                             when (consp child)
+                             collect (format "- %s\n  %s"
+                                             (dom-texts (maple-translate-dom-find child ".NormalSentence_en") "")
+                                             (dom-texts (maple-translate-dom-find child ".NormalSentence_cn") "")))))
+        (unless (null result)
+          (push (cons 'sentence (string-join result "\n")) results)))
+      results)))
 
 (defun maple-translate-iciba(text &optional callback)
   "Translate TEXT with iciba, use async request if CALLBACK non-nil."

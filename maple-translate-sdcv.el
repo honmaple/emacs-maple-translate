@@ -123,19 +123,19 @@
 
 (defun maple-translate-sdcv-format()
   "Format result with sdcv output."
-  (let ((results (cl-loop for index from 0
-                          for dicts in maple-translate-sdcv-dicts
-                          collect
-                          (progn
-                            (goto-char (point-min))
-                            (forward-line index)
-                            (string-join (cl-loop for child across-ref (json-read-from-string (decode-coding-string (thing-at-point 'line t) 'utf-8))
-                                                  collect (format "%s: %s"
-                                                                  (alist-get 'dict child)
-                                                                  (alist-get 'definition child)))
-                                         "\n\n")))))
-    (unless (null results)
-      (string-join (cl-remove nil results) "\n\n"))))
+  (let ((result (cl-loop for index from 0
+                         for dicts in maple-translate-sdcv-dicts
+                         collect
+                         (progn
+                           (goto-char (point-min))
+                           (forward-line index)
+                           (string-join (cl-loop for child across-ref (json-read-from-string (decode-coding-string (thing-at-point 'line t) 'utf-8))
+                                                 collect (format "%s: %s"
+                                                                 (alist-get 'dict child)
+                                                                 (alist-get 'definition child)))
+                                        "\n\n")))))
+    (unless (null result)
+      (list (cons 'basic (string-join (cl-remove nil result) "\n\n"))))))
 
 (defun maple-translate-init()
   "Init sdcv dicts."
@@ -158,13 +158,13 @@
     (unless (or maple-translate-sdcv--cache maple-translate-sdcv--init)
       (run-with-idle-timer 0.1 nil 'maple-translate-init))
     (if (not maple-translate-sdcv--cache)
-        (format "%s" "词典正在初始化，请稍后再试")
-      (let (results)
-        (dolist (dict maple-translate-sdcv--cache)
-          (let ((result (stardict-lookup dict word)))
-            (when result (push result results))))
-        (unless (null results)
-          (string-join results "\n"))))))
+        (list (cons 'basic (format "%s" "词典正在初始化，请稍后再试")))
+      (let ((result (cl-loop for dict in maple-translate-sdcv--cache
+                             as re = (stardict-lookup dict word)
+                             when re
+                             collect re)))
+        (unless (null result)
+          (list (cons 'basic (string-join result "\n"))))))))
 
 (provide 'maple-translate-sdcv)
 ;;; maple-translate-sdcv.el ends here

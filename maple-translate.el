@@ -41,12 +41,13 @@
   :group 'maple-translate
   :type 'string)
 
-(defcustom maple-translate-alist '((sdcv   . maple-translate-sdcv)
-                                   (bing   . maple-translate-bing)
-                                   (iciba  . maple-translate-iciba)
-                                   (youdao . maple-translate-youdao)
-                                   (dictcn . maple-translate-dictcn)
-                                   (google . maple-translate-google))
+(defcustom maple-translate-alist
+  '((sdcv   . maple-translate-sdcv)
+    (bing   . maple-translate-bing)
+    (iciba  . maple-translate-iciba)
+    (youdao . maple-translate-youdao)
+    (dictcn . maple-translate-dictcn)
+    (google . maple-translate-google))
   "Translate function with different engine."
   :group 'maple-translate
   :type '(alist :key-type symbol :value-type function))
@@ -55,6 +56,12 @@
   "Translate engine."
   :group 'maple-translate
   :type '(or symbol list))
+
+(defcustom maple-translate-section
+  '(phonetic basic detail morphology phrase sentence)
+  "Translate result with different section."
+  :group 'maple-translate
+  :type '(list symbol))
 
 (defun maple-translate-word()
   "Get translate word."
@@ -75,14 +82,30 @@
   (unless engine (setq engine maple-translate-engine))
 
   (if (listp engine)
-      (let ((results (cl-loop for e in engine
-                              collect (let ((result (maple-translate-result word e)))
-                                        (unless (string= result "")
-                                          (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))))))
-        (string-join (cl-remove nil results) "\n\n"))
-    (let ((fn (or (assq engine maple-translate-alist) (assq t maple-translate-alist))))
-      (if fn (string-trim (or (funcall (cdr fn) word) ""))
-        (error "No translate engine found")))))
+      (string-join (cl-loop for e in engine
+                            as result = (maple-translate-result word e)
+                            when (not (string= result ""))
+                            collect (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))
+                   "\n\n")
+    (let* ((fn (or (assq engine maple-translate-alist) (assq t maple-translate-alist)))
+           (results (if fn (funcall (cdr fn) word))))
+      (unless fn
+        (error "No translate engine found"))
+      (string-join (cl-loop for section in maple-translate-section
+                            as result = (alist-get section results)
+                            when result
+                            collect (maple-translate-section-result section (string-trim (or result ""))))
+                   "\n\n"))))
+
+(defun maple-translate-section-result(section result)
+  "Get translate SECTION RESULT."
+  (pcase section
+    ('basic (format "基本释义:\n%s" result))
+    ('detail (format "详尽释义:\n%s" result))
+    ('phrase (format "组词:\n%s" result))
+    ('sentence (format "例句:\n%s" result))
+    ('phonetic (format "读音:\n%s" result))
+    ('morphology (format "词态:\n%s" result))))
 
 (defun maple-translate-show-in-buffer(result)
   "Show RESULT in buffer."
