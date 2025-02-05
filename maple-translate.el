@@ -178,6 +178,13 @@
     (evil-make-overriding-map maple-translate-mode-map 'normal)))
 
 ;;;###autoload
+(defun maple-translate-offline(word)
+  "Translate WORD and display result when offline."
+  (interactive (list (maple-translate-word)))
+  (maple-translate-with
+    (maple-translate-show word (or display 'princ) (or engine 'sdcv) section)))
+
+;;;###autoload
 (defun maple-translate+(word)
   "Translate WORD and display result in buffer."
   (interactive (list (maple-translate-word)))
