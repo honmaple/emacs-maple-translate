@@ -47,6 +47,23 @@
            ("lazyworm-ce" . "stardict-lazyworm-ce-2.4.2")))
    #+end_src
 
+   Custom different engine for special command
+   #+begin_src elisp
+   (setq maple-translate-engine-alist '((maple-translate  . youdao)
+                                        (maple-translate+ . sdcv)))
+   #+end_src
+
+   Custom different section for special command
+   #+begin_src elisp
+   (setq maple-translate-section-alist '((maple-translate  . (phonetic basic detail))))
+   #+end_src
+
+   Custom different display for special command
+   #+begin_src elisp
+   (setq maple-translate-display-alist '((maple-translate  . maple-translate-show-in-posframe)
+                                         (maple-translate+ . maple-translate-show-in-buffer)))
+   #+end_src
+
    Custom translate engine
    #+begin_src elisp
    (defun custom-translate-engine(text &optional callback)

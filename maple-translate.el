@@ -30,7 +30,10 @@
 (require 'maple-translate-dictcn)
 (require 'maple-translate-google)
 
-(declare-function evil-make-overriding-map 'evil)
+(declare-function evil-make-overriding-map "evil")
+(declare-function posframe-show "posframe")
+(declare-function posframe-hide "posframe")
+(declare-function posframe-workable-p "posframe")
 
 (defgroup maple-translate nil
   "Translate word between chinese and english."
@@ -57,11 +60,39 @@
   :group 'maple-translate
   :type '(or symbol list))
 
+(defcustom maple-translate-engine-alist nil
+  "Translate engine with different command."
+  :group 'maple-translate
+  :type '(alist :key-type symbol :value-type function))
+
 (defcustom maple-translate-section
   '(phonetic basic detail morphology phrase sentence)
   "Translate result with different section."
   :group 'maple-translate
   :type '(list symbol))
+
+(defcustom maple-translate-section-alist
+  '((maple-translate . (phonetic basic detail)))
+  "The section of translate result with different command."
+  :group 'maple-translate
+  :type '(alist :key-type symbol :value-type function))
+
+(defcustom maple-translate-display-alist nil
+  "The display method of translate result with different command."
+  :group 'maple-translate
+  :type '(alist :key-type symbol :value-type function))
+
+(defmacro maple-translate-with(&rest body)
+  "Wrap translate command with BODY."
+  (declare (indent 0) (debug t))
+  `(let ((engine (maple-translate--get this-command maple-translate-engine-alist))
+         (section (maple-translate--get this-command maple-translate-section-alist))
+         (display (maple-translate--get this-command maple-translate-display-alist)))
+     ,@body))
+
+(defun maple-translate--get(key alist)
+  "Get ALIST value by KEY."
+  (or (alist-get key alist) (alist-get t alist)))
 
 (defun maple-translate-word()
   "Get translate word."
@@ -71,19 +102,19 @@
                                ""))))
     (if (string= word "") (read-from-minibuffer "Translate word: ") word)))
 
-(defun maple-translate-show(word fn)
-  "Show translate result of WORD with FN."
-  (let ((result (maple-translate-result word)))
+(defun maple-translate-show(word fn &optional engine sections)
+  "Show translate result with FN ENGINE SECTIONS of WORD."
+  (let ((result (maple-translate-result word engine sections)))
     (if (string= result "") (princ "No result found")
       (funcall fn result))))
 
-(defun maple-translate-result(word &optional engine)
-  "Get translate result of WORD with ENGINE."
+(defun maple-translate-result(word &optional engine sections)
+  "Get translate result with ENGINE SECTIONS of WORD."
   (unless engine (setq engine maple-translate-engine))
 
   (if (listp engine)
       (string-join (cl-loop for e in engine
-                            as result = (maple-translate-result word e)
+                            as result = (maple-translate-result word e sections)
                             when (not (string= result ""))
                             collect (format "%s\n%s" (propertize (upcase (symbol-name e)) 'face 'font-lock-constant-face) result))
                    "\n\n")
@@ -91,7 +122,7 @@
            (results (if fn (funcall (cdr fn) word))))
       (unless fn
         (error "No translate engine found"))
-      (string-join (cl-loop for section in maple-translate-section
+      (string-join (cl-loop for section in (or sections maple-translate-section)
                             as result = (alist-get section results)
                             when result
                             collect (maple-translate-section-result section (string-trim (or result ""))))
@@ -118,6 +149,21 @@
     (unless (get-buffer-window (current-buffer))
       (switch-to-buffer-other-window maple-translate-buffer))))
 
+(defun maple-translate-posframe--hide()
+  "Hide posframe."
+  (remove-hook 'pre-command-hook #'maple-translate-posframe--hide t)
+  (posframe-hide maple-translate-buffer))
+
+(defun maple-translate-show-in-posframe(result)
+  "Show RESULT in posframe."
+  (maple-translate-posframe--hide)
+  (when (posframe-workable-p)
+    (add-hook 'pre-command-hook #'maple-translate-posframe--hide nil t)
+    (posframe-show maple-translate-buffer
+                   :string result
+                   :position (point)
+                   :internal-border-width 1)))
+
 (defvar maple-translate-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "q" 'quit-window)
@@ -135,13 +181,15 @@
 (defun maple-translate+(word)
   "Translate WORD and display result in buffer."
   (interactive (list (maple-translate-word)))
-  (maple-translate-show word 'maple-translate-show-in-buffer))
+  (maple-translate-with
+    (maple-translate-show word (or display 'maple-translate-show-in-buffer) engine section)))
 
 ;;;###autoload
 (defun maple-translate(word)
   "Translate WORD and display result in echoarea."
   (interactive (list (maple-translate-word)))
-  (maple-translate-show word 'princ))
+  (maple-translate-with
+    (maple-translate-show word (or display 'princ) engine section)))
 
 (provide 'maple-translate)
 ;;; maple-translate.el ends here
