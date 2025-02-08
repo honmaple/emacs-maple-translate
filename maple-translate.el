@@ -159,8 +159,11 @@
   (maple-translate-posframe--hide)
   (when (posframe-workable-p)
     (add-hook 'pre-command-hook #'maple-translate-posframe--hide nil t)
-    (posframe-show maple-translate-buffer
-                   :string result
+    (posframe-show (with-current-buffer (get-buffer-create maple-translate-buffer)
+                     (let ((inhibit-read-only t))
+                       (erase-buffer)
+                       (insert result))
+                     (current-buffer))
                    :position (point)
                    :internal-border-width 1)))
 
