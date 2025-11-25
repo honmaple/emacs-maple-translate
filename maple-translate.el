@@ -1,6 +1,6 @@
 ;;; maple-translate.el ---  maple translate configuration.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2023-2024 lin.jiang
+;; Copyright (C) 2023-2025 lin.jiang
 
 ;; URL: https://github.com/honmaple/emacs-maple-translate
 
@@ -130,13 +130,16 @@
 
 (defun maple-translate-section-result(section result)
   "Get translate SECTION RESULT."
-  (pcase section
-    ('basic (format "基本释义:\n%s" result))
-    ('detail (format "详尽释义:\n%s" result))
-    ('phrase (format "组词:\n%s" result))
-    ('sentence (format "例句:\n%s" result))
-    ('phonetic (format "读音:\n%s" result))
-    ('morphology (format "词态:\n%s" result))))
+  (concat (propertize
+           (pcase section
+             ('basic "基本释义:")
+             ('detail "详尽释义:")
+             ('phrase "组词:")
+             ('sentence "例句:")
+             ('phonetic "读音:")
+             ('morphology "词态:"))
+           'face 'font-lock-type-face)
+          "\n" result))
 
 (defun maple-translate-show-in-buffer(result)
   "Show RESULT in buffer."

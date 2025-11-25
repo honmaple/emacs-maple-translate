@@ -1,6 +1,6 @@
 ;;; maple-translate-core.el ---  translate from chinese to english.	-*- lexical-binding: t -*-
 
-;; Copyright (C) 2023-2024 lin.jiang
+;; Copyright (C) 2023-2025 lin.jiang
 
 ;; URL: https://github.com/honmaple/emacs-maple-translate
 
